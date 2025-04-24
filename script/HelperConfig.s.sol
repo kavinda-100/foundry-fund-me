@@ -2,6 +2,7 @@
 pragma solidity ^0.8.25;
 
 import {Script} from "forge-std/Script.sol";
+import {MockV3Aggregator} from "../test/mocks/MockV3Aggregator.sol";
 
 contract HelperConfig is Script {
     struct NetworkConfig {
@@ -31,7 +32,18 @@ contract HelperConfig is Script {
     function getAnvilETHConfig() public returns (NetworkConfig memory) {
         vm.startBroadcast();
 
+        // deploy a mock price feed contract
+        MockV3Aggregator mockV3Aggregator = new MockV3Aggregator(
+            8,
+            2000 * 1e8 // 2000 USD
+        );
         vm.stopBroadcast();
+
+        // create a new network configuration with the mock price feed address
+        NetworkConfig memory anvilConfig = NetworkConfig({
+            priceFeed: address(mockV3Aggregator)
+        });
+        return anvilConfig;
     }
 
     // a getter function for priceFeed
