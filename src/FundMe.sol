@@ -2,6 +2,7 @@
 pragma solidity ^0.8.25;
 
 import {PriceConverter} from "./PriceConverter.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
 // errors
 error Not_Owner();
@@ -10,13 +11,16 @@ contract FundMe {
     using PriceConverter for uint256;
 
     address private immutable i_owner;
+    AggregatorV3Interface internal s_priceFeed;
     uint256 internal constant MINIMUM_USD = 1 ether;
     address[] internal funders;
     mapping(address funder => uint256 amountFunded) public fundedAmountByFunder;
 
-    constructor() {
+    constructor(address priceFeedAddress) {
         // set the owner when deploying the contract
         i_owner = msg.sender;
+        // set the price feed address when deploying the contract
+        s_priceFeed = AggregatorV3Interface(priceFeedAddress);
     }
 
     // utility function for the check then owner
@@ -29,7 +33,7 @@ contract FundMe {
     function fund() public payable {
         // check the value
         require(
-            msg.value.getConverionRate() >= MINIMUM_USD,
+            msg.value.getConverionRate(s_priceFeed) >= MINIMUM_USD,
             "You need to send some Ether. minimum 1 ETH"
         );
         // add to the array
@@ -79,6 +83,10 @@ contract FundMe {
 
     function getHowmanyFunders() public view returns (uint256) {
         return funders.length;
+    }
+
+    function getPriceFeedVersion() public view returns (uint256) {
+        return s_priceFeed.version();
     }
 
     // if user do somthing accidentally fallback or receive to the fund function by defalt
