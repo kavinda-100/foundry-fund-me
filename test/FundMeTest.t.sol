@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Test, console} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
+import {console} from "forge-std/console.sol";
 import {FundMe} from "../src/FundMe.sol";
 import {DeployFundMe} from "../script/DeployFundMe.s.sol";
 
@@ -20,6 +21,7 @@ contract FundMeTest is Test {
 
     function testPriceFeedVersionIsCorrect() external view {
         // check if the price feed version is correct
+        console.log(fundMe.getPriceFeedVersion());
         assertEq(fundMe.getPriceFeedVersion(), 4);
     }
 }
