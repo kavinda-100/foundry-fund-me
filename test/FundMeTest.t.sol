@@ -59,4 +59,24 @@ contract FundMeTest is Test {
         vm.expectRevert();
         fundMe.withdraw(); // only the owner can withdraw
     }
+
+    function testWithdrawWithSingleFunder() public payable fakeUserWithETH {
+        // Arrange
+        uint256 ownerStartingBalance = fundMe.getOwnerBalance(); // get the owner balance
+        uint256 fundMeStartingBalance = address(fundMe).balance; // get the fundMe balance
+
+        //Act
+        vm.prank(fundMe.getOwner()); // fake the owner the sender
+        fundMe.withdraw(); // withdraw the funds
+
+        // Assert
+        uint256 ownerEndingBalance = fundMe.getOwnerBalance(); // get the owner balance after withdraw
+        uint256 fundMeEndingBalance = address(fundMe).balance; // get the fundMe balance after withdraw
+
+        assertEq(fundMeEndingBalance, 0); // check if the fundMe balance is 0
+        assertEq(
+            fundMeStartingBalance,
+            ownerStartingBalance + ownerEndingBalance
+        ); // check if the owner balance is equal to the starting balance + fundMe balance
+    }
 }

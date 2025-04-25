@@ -82,6 +82,10 @@ contract FundMe {
         return i_owner;
     }
 
+    function getOwnerBalance() public view returns (uint256) {
+        return i_owner.balance;
+    }
+
     function getHowManyFunders() public view returns (uint256) {
         return s_funders.length;
     }
