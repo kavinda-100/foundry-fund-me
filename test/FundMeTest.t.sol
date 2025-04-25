@@ -18,6 +18,14 @@ contract FundMeTest is Test {
         vm.deal(USER, STARTING_BALANCE); // give the USER 10 ETH
     }
 
+    // modifier to fake the USER the sender
+    // this modifier is used to fake the USER the sender of the transaction
+    modifier fakeUserWithETH() {
+        vm.prank(USER); // fake the USER the sender
+        fundMe.fund{value: SEND_VALUE}(); // fund with 5 ETH
+        _;
+    }
+
     function testOwnerIsMsgSender() external view {
         // check if the owner is the sender
         assertEq(fundMe.getOwner(), msg.sender);
@@ -34,31 +42,19 @@ contract FundMeTest is Test {
         fundMe.fund(); // fund with 0 ETH
     }
 
-    function testFundUpdatesFundedAmount() public payable {
-        // fake the USER the sender
-        vm.prank(USER);
-        // fund with 1 ETH
-        fundMe.fund{value: SEND_VALUE}();
+    function testFundUpdatesFundedAmount() public payable fakeUserWithETH {
         // check if the funded amount is updated
         uint256 fundedAmount = fundMe.fundedAmountByFunderAddress(USER);
         assertEq(fundedAmount, SEND_VALUE);
     }
 
-    function testFundAddsFunderToArray() public payable {
-        // fake the USER the sender
-        vm.prank(USER);
-        // fund with 1 ETH
-        fundMe.fund{value: SEND_VALUE}();
+    function testFundAddsFunderToArray() public payable fakeUserWithETH {
         // check if the funder is added to the array
         address funder = fundMe.getFunderByIndex(0);
         assertEq(funder, USER);
     }
 
-    function testWithdrawOnlyByOwner() public {
-        // fake the USER the sender
-        vm.prank(USER);
-        // fund with 1 ETH
-        fundMe.fund{value: SEND_VALUE}();
+    function testWithdrawOnlyByOwner() public fakeUserWithETH {
         // expect revert when USER tries to withdraw
         vm.expectRevert();
         fundMe.withdraw(); // only the owner can withdraw
