@@ -73,7 +73,7 @@ contract FundMe {
         require(callSuccess, "Failed to withdraw the money");
     }
 
-    function getTotalAmountOfFund() public view onlyOwner returns (uint256) {
+    function getTotalAmountOfFund() public view returns (uint256) {
         // add the value of all the mappings in fundedAmountByFunder
         return address(this).balance;
     }

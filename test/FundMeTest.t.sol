@@ -75,8 +75,59 @@ contract FundMeTest is Test {
 
         assertEq(fundMeEndingBalance, 0); // check if the fundMe balance is 0
         assertEq(
-            fundMeStartingBalance,
-            ownerStartingBalance + ownerEndingBalance
+            ownerEndingBalance,
+            ownerStartingBalance + fundMeStartingBalance
         ); // check if the owner balance is equal to the starting balance + fundMe balance
+    }
+
+    function testWithdrawByMultipleFunders() public payable fakeUserWithETH {
+        // Arrange
+        uint160 numberOfFunders = 10; // number of funders
+        uint160 startingFunderIndex = 1; // starting funder index
+
+        for (uint160 i = startingFunderIndex; i < numberOfFunders; i++) {
+            // fund the contract with 5 ETH
+            hoax(address(i), SEND_VALUE); // fake the funder the sender
+            fundMe.fund{value: SEND_VALUE}();
+        }
+
+        uint256 ownerStartingBalance = fundMe.getOwnerBalance(); // get the owner balance
+        uint256 fundMeStartingBalance = address(fundMe).balance; // get the fundMe balance
+
+        //Act
+        vm.prank(fundMe.getOwner()); // fake the owner the sender
+        fundMe.withdraw(); // withdraw the funds
+
+        // Assert
+        assert(address(fundMe).balance == 0); // check if the funder is removed from the array
+        assertEq(
+            fundMe.getOwnerBalance(),
+            ownerStartingBalance + fundMeStartingBalance
+        ); // check if the owner balance is equal to the starting balance + fundMe balance
+    }
+
+    function testTotalAmountOfFund() public payable {
+        // 1. create a three funders with 5 ETH each
+        // 2. check if the total amount of fund is equal to the sum of the funders
+        // 3. check if the total amount of fund is equal to the fundMe balance
+
+        // Arrange
+        uint160 numberOfFunders = 3; // number of funders
+        uint160 startingFunderIndex = 1; // starting funder index
+
+        for (uint160 i = startingFunderIndex; i <= numberOfFunders; i++) {
+            // fund the contract with 5 ETH
+            hoax(address(i), SEND_VALUE); // fake the funder the sender
+            fundMe.fund{value: SEND_VALUE}();
+        }
+        uint256 fundMeBalance = address(fundMe).balance; // get the fundMe balance
+        uint256 totalAmountOfFund = fundMe.getTotalAmountOfFund(); // get the total amount of fund
+        uint256 totalFunders = fundMe.getHowManyFunders(); // get the total number of funders
+
+        // Act
+
+        // Assert
+        assertEq(totalAmountOfFund, fundMeBalance); // check if the total amount of fund is equal to the fundMe balance
+        assertEq(totalFunders, numberOfFunders); // check if the total number of funders is equal to the number of funders
     }
 }
