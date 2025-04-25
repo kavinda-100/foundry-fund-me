@@ -44,10 +44,11 @@ contract FundMe {
     }
 
     function withdraw() public onlyOwner {
+        uint256 fundersCount = s_funders.length;
         // rest the mapping
         for (
             uint256 funderIndex = 0;
-            funderIndex < s_funders.length;
+            funderIndex < fundersCount;
             funderIndex++
         ) {
             address funder = s_funders[funderIndex];
