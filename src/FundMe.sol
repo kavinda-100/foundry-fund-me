@@ -5,16 +5,17 @@ import {PriceConverter} from "./PriceConverter.sol";
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
 // errors
-error Not_Owner();
+error Not__Owner();
 
 contract FundMe {
     using PriceConverter for uint256;
 
     address private immutable i_owner;
     AggregatorV3Interface internal s_priceFeed;
-    uint256 internal constant MINIMUM_USD = 1 ether;
-    address[] internal funders;
-    mapping(address funder => uint256 amountFunded) public fundedAmountByFunder;
+    uint256 internal constant MINIMUM_USD = 3e18;
+    address[] internal s_funders;
+    mapping(address funder => uint256 amountFunded)
+        internal s_fundedAmountByFunder;
 
     constructor(address priceFeedAddress) {
         // set the owner when deploying the contract
@@ -26,39 +27,39 @@ contract FundMe {
     // utility function for the check then owner
     modifier onlyOwner() {
         // require(msg.sender == i_owner, "Only the contract owner can call this function");
-        if (msg.sender != i_owner) revert Not_Owner();
+        if (msg.sender != i_owner) revert Not__Owner();
         _;
     }
 
     function fund() public payable {
         // check the value
         require(
-            msg.value.getConverionRate(s_priceFeed) >= MINIMUM_USD,
-            "You need to send some Ether. minimum 1 ETH"
+            msg.value.getConversionRate(s_priceFeed) >= MINIMUM_USD,
+            "You need to send some Ether. minimum 3 ETH"
         );
         // add to the array
-        funders.push(msg.sender);
-        // add to the mpping
-        fundedAmountByFunder[msg.sender] += msg.value;
+        s_funders.push(msg.sender);
+        // add to the mapping
+        s_fundedAmountByFunder[msg.sender] += msg.value;
     }
 
     function withdraw() public onlyOwner {
         // rest the mapping
         for (
             uint256 funderIndex = 0;
-            funderIndex < funders.length;
+            funderIndex < s_funders.length;
             funderIndex++
         ) {
-            address funder = funders[funderIndex];
-            fundedAmountByFunder[funder] = 0;
+            address funder = s_funders[funderIndex];
+            s_fundedAmountByFunder[funder] = 0;
         }
         // reset the funders array
-        funders = new address[](0);
+        s_funders = new address[](0);
         // transfer the money
 
         //---- first way -----
         // msg.sender -> address
-        // payable(msg.sender) -> payable adderss
+        // payable(msg.sender) -> payable address
         // payable(msg.sender).transfer(address(this).balance);
 
         // --- second way ----
@@ -72,8 +73,8 @@ contract FundMe {
         require(callSuccess, "Failed to withdraw the money");
     }
 
-    function getTotalAmoutOfFund() public view onlyOwner returns (uint256) {
-        // add the value of all the mappinds in fundedAmountByFunder
+    function getTotalAmountOfFund() public view onlyOwner returns (uint256) {
+        // add the value of all the mappings in fundedAmountByFunder
         return address(this).balance;
     }
 
@@ -81,15 +82,25 @@ contract FundMe {
         return i_owner;
     }
 
-    function getHowmanyFunders() public view returns (uint256) {
-        return funders.length;
+    function getHowManyFunders() public view returns (uint256) {
+        return s_funders.length;
     }
 
     function getPriceFeedVersion() public view returns (uint256) {
         return s_priceFeed.version();
     }
 
-    // if user do somthing accidentally fallback or receive to the fund function by defalt
+    function fundedAmountByFunderAddress(
+        address funder
+    ) public view returns (uint256) {
+        return s_fundedAmountByFunder[funder];
+    }
+
+    function getFunderByIndex(uint256 index) public view returns (address) {
+        return s_funders[index];
+    }
+
+    // if user do something accidentally fallback or receive to the fund function by default
     receive() external payable {
         fund();
     }

@@ -20,7 +20,7 @@ library PriceConverter {
         return uint256(answer * 1 ether);
     }
 
-    function getConverionRate(
+    function getConversionRate(
         uint256 _ethAmount,
         AggregatorV3Interface priceFeed
     ) internal view returns (uint256) {
